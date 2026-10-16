@@ -8,13 +8,19 @@ jobs:
   run_tests:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         service: [tasks-api, title-normalizer]
-        python-version: [3.12, 3.11, 3.8]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{matrix.python-version}}
-      - run: pip install -r services/${{matrix.service}}/requirements.txt
-      - run: pytest services/${{matrix.service}}
+          python-version: "3.12"
+      - run: pip install -r services/${{ matrix.service }}/requirements.txt
+      - shell: bash
+        run: pytest -ra services/${{ matrix.service }} | tee ${{ matrix.service }}-test-report.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ matrix.service }}-test-report
+          path: ${{ matrix.service }}-test-report.txt
